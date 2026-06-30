@@ -17,5 +17,4 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 RUN a2enmod rewrite
 
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
-
-CMD php artisan config:clear && php artisan cache:clear && php artisan migrate --force && apache2-foreground
+CMD php artisan config:clear && php artisan cache:clear && php artisan storage:link --force && php artisan migrate --force && apache2-foreground
