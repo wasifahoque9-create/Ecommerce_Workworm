@@ -26,6 +26,46 @@ class CategoryResource extends JsonResource
 
     private function getCategoryImageUrl(): ?string
     {
+        /*
+         |--------------------------------------------------------------------------
+         | Fixed homepage category images
+         |--------------------------------------------------------------------------
+         | These are real files from your storage/app/public/products folder.
+         | This fixes wrong random category images on homepage.
+         */
+
+        $categoryImages = [
+            // Laptop image
+            'laptops' => 'products/WhatsApp Image 2026-06-29 at 1.00.34 AM.jpeg',
+
+            // Desktop / PC image
+            'desktop-pcs' => 'products/0LBVPj94Pc2p6XCHgT2qxhSIDZtve2l8YXq4D5br.jpg',
+
+            // Tablet image
+            'tablets' => 'products/OL8So2oUgZP7XQ2pGoNaZqw7Ehg2H9tfak9Qk18p.jpg',
+
+            // Earbuds image
+            'earbuds' => 'products/dY1zlqHKIvlFGZoydMtR7wEtVa1ZeoNNcYiYI7hW.jpg',
+
+            // Mobile phone image
+            'mobile-phones' => 'products/images (5).jpg.jpeg',
+
+            // Accessory image
+            // Change this filename later if you want another accessory photo.
+            'accessories' => 'products/WhatsApp Image 2026-06-29 at 12.54.01 AM.jpeg',
+        ];
+
+        if (isset($categoryImages[$this->slug])) {
+            return $this->buildStorageUrl($categoryImages[$this->slug]);
+        }
+
+        /*
+         |--------------------------------------------------------------------------
+         | Fallback: use first product image
+         |--------------------------------------------------------------------------
+         | If a new category is added later, it will still try to find product image.
+         */
+
         $product = Product::query()
             ->where('status', 'active')
             ->where(function ($query) {
@@ -43,6 +83,11 @@ class CategoryResource extends JsonResource
             return null;
         }
 
-        return rtrim(config('app.url'), '/') . '/storage/' . ltrim($product->images->first()->image_path, '/');
+        return $this->buildStorageUrl($product->images->first()->image_path);
+    }
+
+    private function buildStorageUrl(string $path): string
+    {
+        return rtrim(config('app.url'), '/') . '/storage/' . ltrim($path, '/');
     }
 }
