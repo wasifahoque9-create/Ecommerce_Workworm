@@ -285,7 +285,7 @@ function ProductCard({
 
       {/* Product details link */}
       <Link
-        href={`/products/${product.slug}`}
+        href={`/products/${product.id}`}
         className="block"
         aria-label={`View ${product.name}`}
       >

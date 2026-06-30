@@ -199,7 +199,7 @@ export default function ProductCard({
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-5">
       <Link
-        href={`/products/${product.slug}`}
+        href={`/products/${product.id}`}
         className="block"
       >
         <div className="relative flex h-52 items-center justify-center overflow-hidden rounded-xl bg-white sm:h-56 lg:h-60">
@@ -226,7 +226,7 @@ export default function ProductCard({
         </p>
 
         <Link
-          href={`/products/${product.slug}`}
+          href={`/products/${product.id}`}
           className="mt-1 block"
         >
           <h3 className="line-clamp-2 min-h-12 text-base font-bold leading-6 text-slate-900 transition group-hover:text-primary">
@@ -272,3 +272,4 @@ export default function ProductCard({
     </article>
   );
 }
+
