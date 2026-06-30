@@ -43,6 +43,6 @@ class CategoryResource extends JsonResource
             return null;
         }
 
-        return asset('storage/' . $product->images->first()->image_path);
+        return rtrim(config('app.url'), '/') . '/storage/' . ltrim($product->images->first()->image_path, '/');
     }
 }
