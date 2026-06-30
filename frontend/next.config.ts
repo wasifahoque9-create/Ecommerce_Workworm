@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "localhost",
+        hostname: "shopsphere-backend-bsma.onrender.com",
         port: "8000",
         pathname: "/storage/**",
       },
