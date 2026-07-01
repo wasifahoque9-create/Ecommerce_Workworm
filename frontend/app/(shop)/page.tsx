@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -10,24 +10,24 @@ import { catalogApi } from "@/lib/api";
 import type { Category } from "@/types";
 
 const categoryIcons: Record<string, string> = {
-  laptop: "💻",
-  laptops: "💻",
-  pc: "🖥️",
-  desktop: "🖥️",
-  desktops: "🖥️",
-  mobile: "📱",
-  mobiles: "📱",
-  phone: "📱",
-  smartphone: "📱",
-  earbuds: "🎧",
-  headphone: "🎧",
-  headphones: "🎧",
-  accessory: "🔌",
-  accessories: "🔌",
-  watch: "⌚",
-  smartwatch: "⌚",
-  tablet: "📟",
-  camera: "📷",
+  laptop: "ðŸ’»",
+  laptops: "ðŸ’»",
+  pc: "ðŸ–¥ï¸",
+  desktop: "ðŸ–¥ï¸",
+  desktops: "ðŸ–¥ï¸",
+  mobile: "ðŸ“±",
+  mobiles: "ðŸ“±",
+  phone: "ðŸ“±",
+  smartphone: "ðŸ“±",
+  earbuds: "ðŸŽ§",
+  headphone: "ðŸŽ§",
+  headphones: "ðŸŽ§",
+  accessory: "ðŸ”Œ",
+  accessories: "ðŸ”Œ",
+  watch: "âŒš",
+  smartwatch: "âŒš",
+  tablet: "ðŸ“Ÿ",
+  camera: "ðŸ“·",
 };
 
 type CategoryWithImage = Category & {
@@ -124,21 +124,21 @@ export default function HomePage() {
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 py-2.5 text-xs font-medium text-slate-600 sm:px-6 lg:px-8">
           <span className="flex items-center gap-2">
-            <span className="text-base">🚚</span>
+            <span className="text-base">ðŸšš</span>
             Free delivery on selected orders
           </span>
 
           <span className="hidden h-4 w-px bg-slate-300 sm:block" />
 
           <span className="flex items-center gap-2">
-            <span className="text-base">🔥</span>
+            <span className="text-base">ðŸ”¥</span>
             New deals added every week
           </span>
 
           <span className="hidden h-4 w-px bg-slate-300 sm:block" />
 
           <span className="flex items-center gap-2">
-            <span className="text-base">🛡️</span>
+            <span className="text-base">ðŸ›¡ï¸</span>
             Secure and trusted shopping
           </span>
         </div>
@@ -189,7 +189,7 @@ export default function HomePage() {
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
-                  href="/products/iphone"
+                  href="#shop-by-category"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F59E0B] px-6 py-3 text-sm font-bold text-white shadow-lg transition duration-300 hover:-translate-y-0.5 hover:bg-[#dc8908] hover:shadow-xl"
                 >
                   Shop Now
@@ -223,7 +223,7 @@ export default function HomePage() {
               <PromoImage
                 src="/mobile.png"
                 alt="Featured ShopSphere gadgets"
-                fallback="💻"
+                fallback="ðŸ’»"
                 className="object-bottom drop-shadow-2xl"
                 priority
               />
@@ -259,11 +259,11 @@ export default function HomePage() {
                 </p>
 
                 <Link
-                  href="/products/watch"
+                  href="/categories/smartwatch"
                   className="mt-4 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#121358] underline decoration-2 underline-offset-4"
                 >
                   Shop now
-                  <span aria-hidden="true">→</span>
+                  <span aria-hidden="true">â†’</span>
                 </Link>
               </div>
 
@@ -271,7 +271,7 @@ export default function HomePage() {
                 <PromoImage
                   src="/watch1.png"
                   alt="Smart watch promotion"
-                  fallback="⌚"
+                  fallback="âŒš"
                   className="object-bottom"
                 />
               </div>
@@ -299,11 +299,11 @@ export default function HomePage() {
                 </p>
 
                 <Link
-                  href="/products/earpods"
+                  href="/categories/earbuds"
                   className="mt-4 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-white underline decoration-2 underline-offset-4"
                 >
                   Shop now
-                  <span aria-hidden="true">→</span>
+                  <span aria-hidden="true">â†’</span>
                 </Link>
               </div>
 
@@ -311,7 +311,7 @@ export default function HomePage() {
                 <PromoImage
                   src="/earsbads.png"
                   alt="Wireless headphones promotion"
-                  fallback="🎧"
+                  fallback="ðŸŽ§"
                   className="object-bottom"
                 />
               </div>
@@ -326,25 +326,25 @@ export default function HomePage() {
       <section className="px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-4">
           <ServiceItem
-            icon="🚚"
+            icon="ðŸšš"
             title="Fast Delivery"
             description="Quick delivery service"
           />
 
           <ServiceItem
-            icon="🔒"
+            icon="ðŸ”’"
             title="Secure Payment"
             description="Protected transactions"
           />
 
           <ServiceItem
-            icon="↩️"
+            icon="â†©ï¸"
             title="Easy Returns"
             description="Simple return process"
           />
 
           <ServiceItem
-            icon="🎧"
+            icon="ðŸŽ§"
             title="Customer Support"
             description="We are ready to help"
           />
@@ -352,7 +352,7 @@ export default function HomePage() {
       </section>
 
       {/* Shop by category */}
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section id="shop-by-category" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#F59E0B]">
@@ -373,7 +373,7 @@ export default function HomePage() {
             className="inline-flex items-center gap-2 text-sm font-bold text-[#121358] transition hover:text-[#F59E0B]"
           >
             View all products
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true">â†’</span>
           </Link>
         </div>
 
@@ -416,7 +416,7 @@ export default function HomePage() {
                       />
                     ) : (
                       <span className="text-3xl">
-                        {categoryIcons[categoryType] ?? "📦"}
+                        {categoryIcons[categoryType] ?? "ðŸ“¦"}
                       </span>
                     )}
                   </div>
