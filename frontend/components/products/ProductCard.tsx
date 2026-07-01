@@ -95,7 +95,7 @@ function RatingStars({ rating }: { rating: number }) {
               : "text-gray-300"
           }
         >
-          ?
+          &#9733;
         </span>
       ))}
     </span>
