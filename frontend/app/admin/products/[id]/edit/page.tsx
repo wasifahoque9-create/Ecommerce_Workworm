@@ -1,164 +1,430 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Button from "@/components/ui/Button";
-import Card, { CardHeader } from "@/components/ui/Card";
-import Input from "@/components/ui/Input";
+
 import { PageLoader } from "@/components/ui/Spinner";
 import { adminApi } from "@/lib/api";
 import type { Category } from "@/types";
 
+type ProductImagePreview = {
+  id?: number;
+  image_path?: string | null;
+  url?: string | null;
+  is_primary?: boolean;
+};
+
+type EditProductForm = {
+  category_id: string;
+  name: string;
+  sku: string;
+  brand: string;
+  price: string;
+  discount_price: string;
+  stock_qty: string;
+  status: string;
+  description: string;
+};
+
+const initialForm: EditProductForm = {
+  category_id: "",
+  name: "",
+  sku: "",
+  brand: "",
+  price: "",
+  discount_price: "",
+  stock_qty: "",
+  status: "active",
+  description: "",
+};
+
+function getImageUrl(image: ProductImagePreview): string {
+  const url = image.url || image.image_path || "";
+
+  if (!url) {
+    return "/placeholder-product.svg";
+  }
+
+  if (/^https?:\/\//i.test(url)) {
+    return url.replace("http://", "https://");
+  }
+
+  const storageBase =
+    process.env.NEXT_PUBLIC_STORAGE_URL ||
+    "https://shopsphere-backend-bsma.onrender.com/storage";
+
+  return `${storageBase}/${url.replace(/^\/+/, "").replace(/^storage\//, "")}`;
+}
+
 export default function EditProductPage() {
   const params = useParams();
-  const id = Number(params.id);
   const router = useRouter();
+
+  const rawId = params.id;
+  const id = Number(Array.isArray(rawId) ? rawId[0] : rawId);
+
   const [categories, setCategories] = useState<Category[]>([]);
+  const [form, setForm] = useState<EditProductForm>(initialForm);
+  const [currentImages, setCurrentImages] = useState<ProductImagePreview[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedPreviews, setSelectedPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    slug: "",
-    brand: "",
-    description: "",
-    price: "",
-    discount_price: "",
-    stock_qty: "",
-    category_id: "",
-    category_ids: [] as number[],
-    specifications: "",
-  });
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([adminApi.products.get(id), adminApi.categories.list()])
-      .then(([product, cats]) => {
-        setCategories(cats);
+    let mounted = true;
+
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const [product, categoryResponse] = await Promise.all([
+          adminApi.products.get(id),
+          adminApi.categories.list(),
+        ]);
+
+        if (!mounted) return;
+
+        const categoryList = Array.isArray(categoryResponse)
+          ? categoryResponse
+          : ((categoryResponse as any).data ?? []);
+
+        setCategories(categoryList);
+
         setForm({
-          name: product.name,
-          slug: product.slug,
-          brand: product.brand || "",
-          description: product.description || "",
-          price: String(product.price),
-          discount_price: product.discount_price ? String(product.discount_price) : "",
-          stock_qty: String(product.stock_qty ?? 0),
           category_id: product.category_id ? String(product.category_id) : "",
-          category_ids: product.categories?.map((c) => c.id) || [],
-          specifications: product.specifications
-            ? Object.entries(product.specifications).map(([k, v]) => `${k}: ${v}`).join("\n")
+          name: product.name ?? "",
+          sku: product.sku ?? "",
+          brand: product.brand ?? "",
+          price: product.price ? String(product.price) : "",
+          discount_price: product.discount_price
+            ? String(product.discount_price)
             : "",
+          stock_qty:
+            product.stock_qty !== null && product.stock_qty !== undefined
+              ? String(product.stock_qty)
+              : "0",
+          status: product.status ?? "active",
+          description: product.description ?? "",
         });
-      })
-      .finally(() => setLoading(false));
+
+        setCurrentImages(product.images ?? []);
+      } catch (error) {
+        console.error("Unable to load product:", error);
+        setError("Product could not be loaded.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      let specifications: Record<string, string> | undefined;
-      if (form.specifications.trim()) {
-        specifications = {};
-        form.specifications.split("\n").forEach((line) => {
-          const [key, ...rest] = line.split(":");
-          if (key && rest.length) specifications![key.trim()] = rest.join(":").trim();
-        });
-      }
+  function updateForm(field: keyof EditProductForm, value: string) {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
 
-      await adminApi.products.update(id, {
-        name: form.name,
-        slug: form.slug,
-        brand: form.brand,
-        description: form.description,
-        price: Number(form.price),
-        discount_price: form.discount_price ? Number(form.discount_price) : null,
-        stock_qty: Number(form.stock_qty),
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+
+    selectedPreviews.forEach((url) => URL.revokeObjectURL(url));
+
+    setSelectedFiles(files);
+    setSelectedPreviews(files.map((file) => URL.createObjectURL(file)));
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    try {
+      setSaving(true);
+      setError("");
+
+      const payload: Record<string, unknown> = {
         category_id: form.category_id ? Number(form.category_id) : null,
-        category_ids: form.category_ids,
-        specifications,
-      });
+        name: form.name,
+        sku: form.sku,
+        brand: form.brand,
+        price: Number(form.price),
+        discount_price: form.discount_price
+          ? Number(form.discount_price)
+          : null,
+        stock_qty: Number(form.stock_qty),
+        status: form.status,
+        description: form.description,
+      };
+
+      await adminApi.products.update(id, payload);
+
       router.push("/admin/products");
+    } catch (error) {
+      console.error("Product update failed:", error);
+      setError("Product could not be updated.");
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) return <PageLoader />;
+  if (loading) {
+    return <PageLoader />;
+  }
 
   return (
-    <div>
-      <Link href="/admin/products" className="text-sm text-primary hover:text-secondary">
-        ← Back to products
-      </Link>
-      <h1 className="mt-4 text-2xl font-bold sm:text-3xl">Edit Product</h1>
+    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl">
+        <Link
+          href="/admin/products"
+          className="text-sm font-semibold text-[#121358] hover:text-orange-500"
+        >
+          ? Back to products
+        </Link>
 
-      <Card className="mt-8 max-w-2xl" padding="md">
-        <CardHeader title="Product Details" />
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Input label="Slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-          <Input label="Brand" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
-          <div>
-            <label className="mb-1 block text-sm font-medium">Description</label>
-            <textarea
-              rows={4}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Price" type="number" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-            <Input label="Discount Price" type="number" step="0.01" value={form.discount_price} onChange={(e) => setForm({ ...form, discount_price: e.target.value })} />
-            <Input label="Stock Qty" type="number" required value={form.stock_qty} onChange={(e) => setForm({ ...form, stock_qty: e.target.value })} />
+        <h1 className="mt-4 text-3xl font-black text-[#121358]">
+          Edit Product
+        </h1>
+
+        <form
+          onSubmit={handleSubmit}
+          className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">
+              {error}
+            </div>
+          )}
+
+          <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Primary Category</label>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Product category
+              </label>
               <select
                 value={form.category_id}
-                onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                onChange={(event) =>
+                  updateForm("category_id", event.target.value)
+                }
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+                required
               >
-                <option value="">Select category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option value="">Select a category</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
                 ))}
               </select>
             </div>
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium">Additional Categories</label>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <label key={cat.id} className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={form.category_ids.includes(cat.id)}
-                    onChange={(e) => {
-                      setForm({
-                        ...form,
-                        category_ids: e.target.checked
-                          ? [...form.category_ids, cat.id]
-                          : form.category_ids.filter((cid) => cid !== cat.id),
-                      });
-                    }}
-                  />
-                  {cat.name}
-                </label>
-              ))}
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Product name
+              </label>
+              <input
+                value={form.name}
+                onChange={(event) => updateForm("name", event.target.value)}
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                SKU
+              </label>
+              <input
+                value={form.sku}
+                onChange={(event) => updateForm("sku", event.target.value)}
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Brand
+              </label>
+              <input
+                value={form.brand}
+                onChange={(event) => updateForm("brand", event.target.value)}
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Price
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.price}
+                onChange={(event) => updateForm("price", event.target.value)}
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Discount price
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.discount_price}
+                onChange={(event) =>
+                  updateForm("discount_price", event.target.value)
+                }
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+                placeholder="Optional"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Stock quantity
+              </label>
+              <input
+                type="number"
+                value={form.stock_qty}
+                onChange={(event) =>
+                  updateForm("stock_qty", event.target.value)
+                }
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Status
+              </label>
+              <select
+                value={form.status}
+                onChange={(event) => updateForm("status", event.target.value)}
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="draft">Draft</option>
+              </select>
             </div>
           </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Specifications (key: value per line)</label>
+
+          <div className="mt-5">
+            <label className="mb-2 block text-sm font-bold text-slate-700">
+              Description
+            </label>
             <textarea
-              rows={4}
-              value={form.specifications}
-              onChange={(e) => setForm({ ...form, specifications: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 font-mono text-sm"
+              value={form.description}
+              onChange={(event) =>
+                updateForm("description", event.target.value)
+              }
+              className="min-h-36 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#121358] focus:ring-2 focus:ring-[#121358]/20"
+              required
             />
           </div>
-          <Button type="submit" loading={saving}>Save Changes</Button>
+
+          <div className="mt-6">
+            <p className="mb-3 text-sm font-bold text-slate-700">
+              Current images
+            </p>
+
+            {currentImages.length > 0 ? (
+              <div className="flex flex-wrap gap-4">
+                {currentImages.map((image, index) => (
+                  <div key={image.id ?? index}>
+                    <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                      <img
+                        src={getImageUrl(image)}
+                        alt={form.name || "Product"}
+                        className="h-full w-full object-contain p-2"
+                        onError={(event) => {
+                          event.currentTarget.src =
+                            "/placeholder-product.svg";
+                        }}
+                      />
+                    </div>
+
+                    {image.is_primary && (
+                      <p className="mt-2 text-xs font-bold text-green-600">
+                        Primary image
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-32 w-32 items-center justify-center rounded-xl bg-slate-200 text-sm font-bold text-slate-500">
+                Product
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6">
+            <label className="mb-2 block text-sm font-bold text-slate-700">
+              Replace product images
+            </label>
+
+            <input
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              multiple
+              onChange={handleFileChange}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm"
+            />
+
+            {selectedPreviews.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-4">
+                {selectedPreviews.map((preview, index) => (
+                  <div key={preview}>
+                    <div className="flex h-32 w-32 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                      <img
+                        src={preview}
+                        alt={`Selected image ${index + 1}`}
+                        className="h-full w-full object-contain p-2"
+                      />
+                    </div>
+
+                    {index === 0 && (
+                      <p className="mt-2 text-xs font-bold text-green-600">
+                        New primary image
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-8 flex justify-end gap-3 border-t border-slate-200 pt-6">
+            <Link
+              href="/admin/products"
+              className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
+            >
+              Cancel
+            </Link>
+
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-[#121358] px-7 py-3 text-sm font-black text-white transition hover:bg-orange-500 disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }
