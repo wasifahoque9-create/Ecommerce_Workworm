@@ -79,35 +79,44 @@ function getDiscountPercentage(product: Product): number | null {
 */
 
 function RatingStars({ rating }: { rating: number }) {
-  const roundedRating = Math.round(rating);
+  const initialRating = Math.round(Number(rating || 0));
+  const [selectedRating, setSelectedRating] = useState(initialRating);
+  const [hoveredRating, setHoveredRating] = useState(0);
+
+  const activeRating = hoveredRating || selectedRating;
 
   return (
     <span
-      className="flex cursor-pointer items-center gap-0.5"
-      aria-label={`${rating} out of 5 stars`}
+      className="flex items-center gap-0.5"
+      aria-label={`${activeRating} out of 5 stars`}
     >
-      {Array.from({ length: 5 }, (_, index) => (
-        <span
-          key={index}
-          className={
-            index < roundedRating
-              ? "text-amber-400"
-              : "text-gray-300"
-          }
-        >
-          &#9733;
-        </span>
-      ))}
+      {Array.from({ length: 5 }, (_, index) => {
+        const starValue = index + 1;
+        const isActive = starValue <= activeRating;
+
+        return (
+          <button
+            key={starValue}
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setSelectedRating(starValue);
+            }}
+            onMouseEnter={() => setHoveredRating(starValue)}
+            onMouseLeave={() => setHoveredRating(0)}
+            className={`text-lg leading-none transition ${
+              isActive ? "text-amber-400" : "text-gray-300"
+            } hover:text-amber-400`}
+            aria-label={`Select ${starValue} star`}
+          >
+            &#9733;
+          </button>
+        );
+      })}
     </span>
   );
 }
-
-/*
-|--------------------------------------------------------------------------
-| Product Card
-|--------------------------------------------------------------------------
-*/
-
 export default function ProductCard({
   product,
 }: {
@@ -234,17 +243,13 @@ export default function ProductCard({
           </h3>
         </Link>
 
-        <Link
-          href={`/products/${product.id}#reviews`}
-          className="mt-3 inline-flex items-center gap-2 text-sm transition hover:opacity-80"
-          aria-label={`View reviews for ${product.name}`}
-        >
+        <div className="mt-3 flex items-center gap-2 text-sm">
           <RatingStars rating={rating} />
 
           <span className="text-gray-400">
             ({reviewCount})
           </span>
-        </Link>
+        </div>
 
         <div className="mt-4 flex min-h-8 items-center gap-2">
           {discountPercentage !== null && (
