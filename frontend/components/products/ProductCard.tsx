@@ -245,10 +245,6 @@ export default function ProductCard({
 
         <div className="mt-3 flex items-center gap-2 text-sm">
           <RatingStars rating={rating} />
-
-          <span className="text-gray-400">
-            ({reviewCount})
-          </span>
         </div>
 
         <div className="mt-4 flex min-h-8 items-center gap-2">
