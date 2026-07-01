@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 import ProductsByCategory from "@/components/products/ProductsByCategory";
 import { PageLoader } from "@/components/ui/Spinner";
@@ -326,25 +326,24 @@ export default function HomePage() {
       <section className="px-4 py-5 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:grid-cols-4">
           <ServiceItem
-            icon="ðŸšš"
+            icon={<Truck size={22} strokeWidth={2.2} />}
             title="Fast Delivery"
             description="Quick delivery service"
           />
 
           <ServiceItem
-            icon="ðŸ”’"
+            icon={<ShieldCheck size={22} strokeWidth={2.2} />}
             title="Secure Payment"
             description="Protected transactions"
           />
 
           <ServiceItem
-            icon="â†©ï¸"
+            icon={<RotateCcw size={22} strokeWidth={2.2} />}
             title="Easy Returns"
             description="Simple return process"
           />
-
           <ServiceItem
-            icon="ðŸŽ§"
+            icon={<Headphones size={22} strokeWidth={2.2} />}
             title="Customer Support"
             description="We are ready to help"
           />
@@ -394,9 +393,9 @@ export default function HomePage() {
 
               const categoryImageUrl = (category as CategoryWithImage).image_url
                 ? (category as CategoryWithImage).image_url!.replace(
-                    "http://",
-                    "https://",
-                  )
+                  "http://",
+                  "https://",
+                )
                 : null;
 
               return (
@@ -450,7 +449,7 @@ export default function HomePage() {
 }
 
 type ServiceItemProps = {
-  icon: string;
+  icon: ReactNode;
   title: string;
   description: string;
 };
@@ -458,9 +457,9 @@ type ServiceItemProps = {
 function ServiceItem({ icon, title, description }: ServiceItemProps) {
   return (
     <div className="flex items-center gap-3 border-b border-r border-slate-200 p-4 transition hover:bg-slate-50 sm:p-5 lg:border-b-0">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/10 text-xl">
-        {icon}
-      </div>
+    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F59E0B]/10 text-[#121358]">
+    {icon}
+</div>
 
       <div className="min-w-0">
         <h3 className="text-sm font-bold text-[#121358]">{title}</h3>
