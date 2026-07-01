@@ -31,6 +31,14 @@ class ProductImage extends Model
 
     public function getUrlAttribute(): string
     {
-        return asset('storage/'.$this->image_path);
+        if (! $this->image_path) {
+            return '';
+        }
+
+        if (preg_match('/^https?:\/\//i', $this->image_path)) {
+            return $this->image_path;
+        }
+
+        return rtrim(config('app.url'), '/') . '/storage/' . ltrim($this->image_path, '/');
     }
 }

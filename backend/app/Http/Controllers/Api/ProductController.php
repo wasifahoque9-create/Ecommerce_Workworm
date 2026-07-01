@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use Cloudinary\Cloudinary;
+
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Product\StoreProductRequest;
@@ -467,10 +469,7 @@ public function store(
         foreach (
             $uploadedImages as $index => $image
         ) {
-            $imagePath = $image->store(
-                'products',
-                'public',
-            );
+            $imagePath = $this->uploadProductImage($image);
 
             $storedImagePaths[] = $imagePath;
 
@@ -696,6 +695,27 @@ public function store(
             ->categories()
             ->sync($categoryIds);
     }
+    private function uploadProductImage($image): string
+    {
+        $cloudinaryUrl = env('CLOUDINARY_URL');
+
+        if (! $cloudinaryUrl) {
+            return $image->store('products', 'public');
+        }
+
+        $cloudinary = new Cloudinary($cloudinaryUrl);
+
+        $uploadedFile = $cloudinary->uploadApi()->upload(
+            $image->getRealPath(),
+            [
+                'folder' => 'shopsphere/products',
+                'resource_type' => 'image',
+            ]
+        );
+
+        return $uploadedFile['secure_url'];
+    }
+
 
     /*
     |--------------------------------------------------------------------------
