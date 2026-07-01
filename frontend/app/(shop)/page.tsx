@@ -362,7 +362,7 @@ export default function HomePage() {
                 </p>
 
                 <Link
-                  href="/categories/smartwatch"
+                  href="/categories/Accessories"
                   className="mt-4 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-[#121358] underline decoration-2 underline-offset-4"
                 >
                   Shop now
