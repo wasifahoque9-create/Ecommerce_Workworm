@@ -695,6 +695,21 @@ public function store(
             ->categories()
             ->sync($categoryIds);
     }
+    private function buildProductImageUrl(?string $imagePath): string
+    {
+        if (! $imagePath) {
+            return '';
+        }
+
+        $imagePath = trim($imagePath);
+
+        if (preg_match('/^https?:\/\//i', $imagePath)) {
+            return $imagePath;
+        }
+
+        return rtrim(config('app.url'), '/') . '/storage/' . ltrim($imagePath, '/');
+    }
+
     private function uploadProductImage($image): string
     {
         $cloudinaryUrl = env('CLOUDINARY_URL');
