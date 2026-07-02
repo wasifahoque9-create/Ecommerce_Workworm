@@ -123,7 +123,7 @@ const heroSlides = [
       "High-performance laptops built for work, gaming, and everything in between.",
     price: "412",
     discount: "Save up to 20%",
-    image: "/mobile.png",
+    image: "/laptp2.png",
     fallback: "💻",
     ctaHref: "#shop-by-category",
   },
@@ -136,10 +136,10 @@ const heroSlides = [
       </>
     ),
     description:
-      "Crisp photos, sharp video, and effortless sharing wherever you go.",
+      "Power, performance, and productivity in one setup",
     price: "189",
     discount: "Save up to 30%",
-    image: "/mobile.png",
+    image: "/sle1.png",
     fallback: "📷",
     ctaHref: "#shop-by-category",
   },
